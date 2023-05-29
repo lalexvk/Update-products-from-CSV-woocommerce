@@ -13,7 +13,7 @@ ignored_skus=("SKU" "sku2")
 username="..."
 
 # Start message in the log
-echo "Ejecutando el script de actualización de productos..."
+echo "Running the product update script..."
 
 # SQL query to retrieve product information
 sql_query="SELECT p.ID, p.post_status, pm.meta_value AS sku
@@ -26,9 +26,9 @@ sql_query="SELECT p.ID, p.post_status, pm.meta_value AS sku
 results=$(wp db query "$sql_query" --skip-plugins --skip-themes --quiet --raw)
 
 # Iterate over each line of the CSV file
-	while IFS=';' read -r sku precio stock || [[ -n "$sku" ]]; do
+	while IFS=';' read -r sku price stock || [[ -n "$sku" ]]; do
 		sku=$(sed 's/"//g' <<< "$sku")
-		precio=$(sed 's/"//g' <<< "$precio")
+		price=$(sed 's/"//g' <<< "$price")
 		stock=$(sed 's/"//g' <<< "$stock")
 
 		# Check if SKU should be ignored
@@ -61,16 +61,17 @@ results=$(wp db query "$sql_query" --skip-plugins --skip-themes --quiet --raw)
 	fi
 
 	# Update the price and stock of the product in WooCommerce
-	wp db query "UPDATE wp_postmeta SET meta_value = '$precio' WHERE post_id = $product_id AND meta_key IN ('_regular_price', '_price');" --skip-plugins --skip-themes --quiet
+	wp db query "UPDATE wp_postmeta SET meta_value = '$price' WHERE post_id = $product_id AND meta_key IN ('_regular_price', '_price');" --skip-plugins --skip-themes --quiet
 	wp db query "UPDATE wp_postmeta SET meta_value = '$stock' WHERE post_id = $product_id AND meta_key = '_stock';" --skip-plugins --skip-themes --quiet
-	echo "Product SKU: $sku updated with price: $precio and stock: $stock"
+	echo "Product SKU: $sku updated with price: $price and stock: $stock"
 done < "$csv_file"
 
 # Completion message in the log
-echo "Script de actualización de productos completado."
+echo "
+Product update script completed."
 # End of execution time
 end_time=$(date +%s)
 execution_time=$((end_time - start_time))
 
 # Print the execution time in seconds
-echo "Tiempo de ejecución: $execution_time segundos."
+echo "Execution time: $execution_time seconds."
